@@ -5,7 +5,6 @@ sendBtn = form.querySelector("button"),
 chatBox = document.querySelector(".chat-box"),
 attachmentInput = form.querySelector("#attachment");
 
-
 let attachmentPreview = document.querySelector(".attachment-preview");
 if (!attachmentPreview) {
     attachmentPreview = document.createElement("div");
@@ -130,4 +129,86 @@ setInterval(() =>{
 
 function scrollToBottom(){
     chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+// Funcionalidad para ver y eliminar miembros
+document.querySelector("#groupMembers").onclick = function(e) {
+    e.preventDefault();
+    
+    const modalHTML = `
+        <div class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Group Members</h3>
+                    <span class="close">&times;</span>
+                </div>
+                <div class="member-list"></div>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    const modal = document.querySelector(".modal");
+    modal.style.display = "block";
+
+    document.querySelector(".close").onclick = () => modal.remove();
+    window.onclick = (e) => {
+        if (e.target === modal) modal.remove();
+    };
+
+    fetch("php/get_group_members.php", {
+        method: 'POST',
+        body: new URLSearchParams({
+            'room_id': incoming_id
+        })
+    })
+    .then(response => response.text())
+    .then(html => {
+        document.querySelector(".member-list").innerHTML = html;
+        
+        document.querySelectorAll('.remove-member').forEach(btn => {
+            btn.onclick = function() {
+                const userId = this.getAttribute('data-user-id');
+                const memberItem = this.closest('.member-item');
+                
+                if(confirm('¿Estás seguro de que quieres eliminar a este miembro?')) {
+                    fetch("php/remove_member.php", {
+                        method: 'POST',
+                        body: new URLSearchParams({
+                            'user_id': userId,
+                            'room_id': incoming_id
+                        })
+                    })
+                    .then(response => response.text())
+                    .then(result => {
+                        if(result === "success") {
+                            memberItem.remove();
+                        }
+                    });
+                }
+            };
+        });
+    });
+};
+
+// Leave Group
+if(document.querySelector("#leaveGroup")) {
+    document.querySelector("#leaveGroup").onclick = function(e) {
+        e.preventDefault();
+        if(confirm("Are you sure you want to leave this group?")) {
+            let formData = new URLSearchParams();
+            formData.append("room_id", incoming_id);
+            
+            fetch("php/leave_group.php", {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.text())
+            .then(result => {
+                if(result === "success") {
+                    window.location.href = "users.php";
+                }
+            });
+        }
+    };
 }

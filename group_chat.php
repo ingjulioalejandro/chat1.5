@@ -35,6 +35,8 @@ if(!isset($_SESSION['unique_id'])){
               <a href="group_settings.php?group_id=<?php echo $room_id; ?>">Group Settings</a>
               <a href="#" id="deleteGroup" data-group-id="<?php echo $room_id; ?>">Delete Group</a>
             <?php endif; ?>
+            <a href="#" id="groupMembers">Group Members</a>
+            <a href="#" id="leaveGroup">Leave Group</a>
           </div>
         </div>
       </header>
@@ -54,6 +56,6 @@ if(!isset($_SESSION['unique_id'])){
   <script>
     const roomId = <?php echo $room_id; ?>;
   </script>
-  <script src="javascript/group_chat.js"></script>
+  <script src="javascript/chat.js"></script>
 </body>
 </html>

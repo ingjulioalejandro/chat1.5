@@ -4,6 +4,17 @@
         include_once "config.php";
         $outgoing_id = $_SESSION['unique_id'];
         $incoming_id = mysqli_real_escape_string($conn, $_POST['incoming_id']);
+
+        // Marcar mensajes como leídos al inicio
+        $update_sql = "UPDATE messages 
+                      SET DeliveredStatus = 'read' 
+                      WHERE (
+                          (incoming_msg_id = {$outgoing_id} AND outgoing_msg_id = {$incoming_id} AND room_id IS NULL)
+                          OR 
+                          (room_id = {$incoming_id} AND outgoing_msg_id != {$outgoing_id})
+                      )";
+        mysqli_query($conn, $update_sql);
+
         $output = "";
         $sql = "SELECT m.*, u.img, u.fname, u.lname 
                 FROM messages m
@@ -17,7 +28,6 @@
             while($row = mysqli_fetch_assoc($query)){
                 $time = date('h:i A', strtotime($row['sent_at']));
                 if($row['outgoing_msg_id'] == 0 && $row['incoming_msg_id'] == 0){
-
                     $output .= '<div class="chat system-message">
                                 <div class="details">
                                     <p>'. $row['msg'] .'</p>

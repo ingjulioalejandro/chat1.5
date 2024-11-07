@@ -5,11 +5,12 @@
     $lname = mysqli_real_escape_string($conn, $_POST['lname']);
     $email = mysqli_real_escape_string($conn, $_POST['email']);
     $password = mysqli_real_escape_string($conn, $_POST['password']);
+
     if(!empty($fname) && !empty($lname) && !empty($email) && !empty($password)){
         if(filter_var($email, FILTER_VALIDATE_EMAIL)){
             $sql = mysqli_query($conn, "SELECT * FROM users WHERE email = '{$email}'");
             if(mysqli_num_rows($sql) > 0){
-                echo "$email - This email already exist!";
+                echo "$email - This email already exists!";
             }else{
                 if(isset($_FILES['image'])){
                     $img_name = $_FILES['image']['name'];
@@ -29,13 +30,38 @@
                                 $ran_id = rand(time(), 100000000);
                                 $status = "Active now";
                                 $encrypt_pass = md5($password);
-                                $insert_query = mysqli_query($conn, "INSERT INTO users (unique_id, fname, lname, email, password, img, status)
+
+                                
+                                $sql2 = mysqli_query($conn, "INSERT INTO users (unique_id, fname, lname, email, password, img, status)
                                 VALUES ({$ran_id}, '{$fname}','{$lname}', '{$email}', '{$encrypt_pass}', '{$new_img_name}', '{$status}')");
-                                if($insert_query){
-                                    $select_sql2 = mysqli_query($conn, "SELECT * FROM users WHERE email = '{$email}'");
-                                    if(mysqli_num_rows($select_sql2) > 0){
-                                        $result = mysqli_fetch_assoc($select_sql2);
-                                        $_SESSION['unique_id'] = $result['unique_id'];
+
+                                
+                                $conn_myweb = new mysqli("localhost", "root", "", "myweb");
+                                
+                                
+                                $sql_myweb = "INSERT INTO users (unique_id, fname, lname, email, password, img, status)
+                                            VALUES (?, ?, ?, ?, ?, ?, ?)";
+                                
+                                if ($stmt = $conn_myweb->prepare($sql_myweb)) {
+                                    $stmt->bind_param("issssss", 
+                                        $ran_id, 
+                                        $fname,
+                                        $lname, 
+                                        $email, 
+                                        $encrypt_pass, 
+                                        $new_img_name, 
+                                        $status
+                                    );
+                                    $stmt->execute();
+                                    $stmt->close();
+                                }
+                                $conn_myweb->close();
+
+                                if($sql2){
+                                    $sql3 = mysqli_query($conn, "SELECT * FROM users WHERE email = '{$email}'");
+                                    if(mysqli_num_rows($sql3) > 0){
+                                        $row = mysqli_fetch_assoc($sql3);
+                                        $_SESSION['unique_id'] = $row['unique_id'];
                                         echo "success";
                                     }else{
                                         echo "This email address not Exist!";
